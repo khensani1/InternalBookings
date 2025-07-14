@@ -7,15 +7,11 @@
 
 <h1>Bookings</h1>
 <form method="get" class="form-inline mb-3">
-    <select name="resourceId" class="form-control mr-2">
+    <select name="resourceId" class="form-control mr-2" asp-items="ViewBag.ResourceId">
         <option value="">All Resources</option>
-        @foreach (var res in (SelectList)ViewBag.ResourceId)
-        {
-            <option value="@res.Value" @(Request.Query["resourceId"] == res.Value ? "selected" : "")>@res.Text</option>
-        }
     </select>
-    <input type="date" name="date" value="@Request.Query["date"]" class="form-control mr-2" />
-    <input type="text" name="bookedBy" value="@Request.Query["bookedBy"]" class="form-control mr-2" placeholder="Booked By" />
+    <input type="date" name="date" value="@(ViewBag.Date ?? "")" class="form-control mr-2" />
+    <input type="text" name="bookedBy" value="@(ViewBag.BookedBy ?? "")" class="form-control mr-2" placeholder="Booked By" />
     <button type="submit" class="btn btn-primary">Search</button>
     <a href="@Url.Action("Index")" class="btn btn-secondary ml-2">Reset</a>
 </form>
@@ -41,7 +37,7 @@
             <td>@booking.Purpose</td>
             <td>
                 <a asp-action="Edit" asp-route-id="@booking.Id">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@booking.Id">Delete</a>
+                <a asp-action="Delete" asp-route-id="@booking.Id" onclick="return confirm('Are you sure you want to delete this booking?');">Delete</a>
             </td>
         </tr>
     }

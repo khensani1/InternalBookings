@@ -14,6 +14,9 @@ public class ResourcesController : Controller
     // GET: Resources
     public async Task<IActionResult> Index(string searchName, string searchLocation, bool? searchAvailable)
     {
+        ViewBag.SearchName = searchName;
+        ViewBag.SearchLocation = searchLocation;
+        ViewBag.SearchAvailable = searchAvailable;
         var resources = _context.Resources.AsQueryable();
         if (!string.IsNullOrEmpty(searchName))
             resources = resources.Where(r => r.Name.Contains(searchName));
@@ -50,6 +53,7 @@ public class ResourcesController : Controller
         {
             _context.Add(resource);
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Resource created successfully.";
             return RedirectToAction(nameof(Index));
         }
         return View(resource);
@@ -76,6 +80,7 @@ public class ResourcesController : Controller
             {
                 _context.Update(resource);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Resource updated successfully.";
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -106,6 +111,11 @@ public class ResourcesController : Controller
         {
             _context.Resources.Remove(resource);
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Resource deleted successfully.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Resource not found or already deleted.";
         }
         return RedirectToAction(nameof(Index));
     }

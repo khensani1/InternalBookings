@@ -156,3 +156,4 @@
 /home/khensani/InternalResourceBooking/InternalResourceBooking/obj/Debug/net8.0/InternalResourceBooking.pdb
 /home/khensani/InternalResourceBooking/InternalResourceBooking/obj/Debug/net8.0/InternalResourceBooking.genruntimeconfig.cache
 /home/khensani/InternalResourceBooking/InternalResourceBooking/obj/Debug/net8.0/ref/InternalResourceBooking.dll
+/home/khensani/InternalResourceBooking/InternalResourceBooking/obj/Debug/net8.0/InternalResourceBooking.sourcelink.json

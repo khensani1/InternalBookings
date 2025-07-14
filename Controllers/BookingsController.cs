@@ -17,6 +17,8 @@ public class BookingsController : Controller
     // GET: Bookings
     public async Task<IActionResult> Index(int? resourceId, DateTime? date, string bookedBy)
     {
+        ViewBag.BookedBy = bookedBy;
+        ViewBag.Date = date?.ToString("yyyy-MM-dd");
         var bookings = _context.Bookings.Include(b => b.Resource).AsQueryable();
         if (resourceId.HasValue)
             bookings = bookings.Where(b => b.ResourceId == resourceId.Value);
@@ -62,6 +64,7 @@ public class BookingsController : Controller
         {
             _context.Add(booking);
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Booking created successfully.";
             return RedirectToAction(nameof(Index));
         }
         return View(booking);
@@ -107,6 +110,7 @@ public class BookingsController : Controller
             {
                 _context.Update(booking);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Booking updated successfully.";
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -139,6 +143,11 @@ public class BookingsController : Controller
         {
             _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Booking deleted successfully.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = "Booking not found or already deleted.";
         }
         return RedirectToAction(nameof(Index));
     }

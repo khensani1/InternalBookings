@@ -2,16 +2,29 @@
 
 @{
     ViewData["Title"] = "Resources";
+    var available = ViewBag.SearchAvailable;
+    var options = new List<(string Value, string Text)>
+    {
+        ("", "All"),
+        ("true", "Available"),
+        ("false", "Unavailable")
+    };
+    var optionHtml = new System.Text.StringBuilder();
+    foreach (var opt in options)
+    {
+        var selected = (available == null && opt.Value == "") ||
+                       (available != null && available.ToString().ToLower() == opt.Value)
+                       ? " selected" : "";
+        optionHtml.Append($"<option value=\"{opt.Value}\"{selected}>{opt.Text}</option>");
+    }
 }
 
 <h1>Resources</h1>
 <form method="get" class="form-inline mb-3">
-    <input type="text" name="searchName" value="@Request.Query["searchName"]" class="form-control mr-2" placeholder="Name" />
-    <input type="text" name="searchLocation" value="@Request.Query["searchLocation"]" class="form-control mr-2" placeholder="Location" />
+    <input type="text" name="searchName" value="@(ViewBag.SearchName ?? "")" class="form-control mr-2" placeholder="Name" />
+    <input type="text" name="searchLocation" value="@(ViewBag.SearchLocation ?? "")" class="form-control mr-2" placeholder="Location" />
     <select name="searchAvailable" class="form-control mr-2">
-        <option value="">All</option>
-        <option value="true" @(Request.Query["searchAvailable"] == "true" ? "selected" : "")>Available</option>
-        <option value="false" @(Request.Query["searchAvailable"] == "false" ? "selected" : "")>Unavailable</option>
+        @Html.Raw(optionHtml.ToString())
     </select>
     <button type="submit" class="btn btn-primary">Search</button>
     <a href="@Url.Action("Index")" class="btn btn-secondary ml-2">Reset</a>
@@ -42,7 +55,7 @@
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" onclick="return confirm('Are you sure you want to delete this resource?');">Delete</a>
             </td>
         </tr>
     }

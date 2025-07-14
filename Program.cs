@@ -31,4 +31,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Seed sample data
+ApplicationDbContext.SeedData(app.Services);
+
 app.Run();

@@ -16,4 +16,21 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(b => b.ResourceId)
             .OnDelete(DeleteBehavior.Cascade);
     }
+
+    public static void SeedData(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Database.EnsureCreated();
+        if (!context.Resources.Any())
+        {
+            context.Resources.AddRange(
+                new Resource { Name = "Meeting Room Alpha", Description = "Large room with projector and whiteboard", Location = "3rd Floor, West Wing", Capacity = 10, IsAvailable = true },
+                new Resource { Name = "Company Car 1", Description = "Compact sedan", Location = "Parking Bay 5", Capacity = 5, IsAvailable = true },
+                new Resource { Name = "Conference Room Beta", Description = "Medium room with video conferencing", Location = "2nd Floor, East Wing", Capacity = 8, IsAvailable = true },
+                new Resource { Name = "Projector", Description = "HD projector", Location = "Equipment Room", Capacity = 1, IsAvailable = true }
+            );
+            context.SaveChanges();
+        }
+    }
 } 

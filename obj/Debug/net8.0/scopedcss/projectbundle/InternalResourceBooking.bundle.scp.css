@@ -47,3 +47,12 @@ button.accept-policy[b-1xdzqctlbq] {
   white-space: nowrap;
   line-height: 60px;
 }
+
+.navbar[b-1xdzqctlbq] {
+  background-color: #1b6ec2 !important;
+}
+
+.navbar .navbar-nav .nav-link[b-1xdzqctlbq],
+.navbar .navbar-brand[b-1xdzqctlbq] {
+  color: #fff !important;
+}
