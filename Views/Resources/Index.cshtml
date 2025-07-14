@@ -1,0 +1,50 @@
+@model IEnumerable<Resource>
+
+@{
+    ViewData["Title"] = "Resources";
+}
+
+<h1>Resources</h1>
+<form method="get" class="form-inline mb-3">
+    <input type="text" name="searchName" value="@Request.Query["searchName"]" class="form-control mr-2" placeholder="Name" />
+    <input type="text" name="searchLocation" value="@Request.Query["searchLocation"]" class="form-control mr-2" placeholder="Location" />
+    <select name="searchAvailable" class="form-control mr-2">
+        <option value="">All</option>
+        <option value="true" @(Request.Query["searchAvailable"] == "true" ? "selected" : "")>Available</option>
+        <option value="false" @(Request.Query["searchAvailable"] == "false" ? "selected" : "")>Unavailable</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary ml-2">Reset</a>
+</form>
+<p>
+    <a class="btn btn-primary" asp-action="Create">Add Resource</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Location</th>
+            <th>Capacity</th>
+            <th>Available</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Name</td>
+            <td>@item.Description</td>
+            <td>@item.Location</td>
+            <td>@item.Capacity</td>
+            <td>@(item.IsAvailable ? "Yes" : "No")</td>
+            <td>
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table> 

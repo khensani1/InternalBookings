@@ -1,0 +1,49 @@
+@model IEnumerable<Booking>
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Bookings";
+}
+
+<h1>Bookings</h1>
+<form method="get" class="form-inline mb-3">
+    <select name="resourceId" class="form-control mr-2">
+        <option value="">All Resources</option>
+        @foreach (var res in (SelectList)ViewBag.ResourceId)
+        {
+            <option value="@res.Value" @(Request.Query["resourceId"] == res.Value ? "selected" : "")>@res.Text</option>
+        }
+    </select>
+    <input type="date" name="date" value="@Request.Query["date"]" class="form-control mr-2" />
+    <input type="text" name="bookedBy" value="@Request.Query["bookedBy"]" class="form-control mr-2" placeholder="Booked By" />
+    <button type="submit" class="btn btn-primary">Search</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary ml-2">Reset</a>
+</form>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Resource</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Booked By</th>
+            <th>Purpose</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var booking in Model)
+    {
+        <tr>
+            <td>@booking.Resource?.Name</td>
+            <td>@booking.StartTime</td>
+            <td>@booking.EndTime</td>
+            <td>@booking.BookedBy</td>
+            <td>@booking.Purpose</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@booking.Id">Edit</a> |
+                <a asp-action="Delete" asp-route-id="@booking.Id">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table> 
