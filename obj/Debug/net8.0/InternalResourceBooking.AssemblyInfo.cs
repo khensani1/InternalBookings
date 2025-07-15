@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InternalResourceBooking")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8bfce12295e2de63d0703b541e3113c92f0b2614")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b0746bf6c72567a58553b3145765a9f2b9525715")]
 [assembly: System.Reflection.AssemblyProductAttribute("InternalResourceBooking")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InternalResourceBooking")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

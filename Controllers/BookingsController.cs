@@ -28,6 +28,13 @@ public class BookingsController : Controller
             bookings = bookings.Where(b => b.BookedBy.Contains(bookedBy));
         bookings = bookings.OrderBy(b => b.StartTime);
         ViewData["ResourceId"] = new SelectList(_context.Resources, "Id", "Name", resourceId);
+
+        // Calculate stats from the database (not just filtered list)
+        var now = DateTime.Today;
+        ViewBag.TotalBookings = await _context.Bookings.CountAsync();
+        ViewBag.TodaysBookings = await _context.Bookings.CountAsync(b => b.StartTime.Date == now);
+        ViewBag.UpcomingBookings = await _context.Bookings.CountAsync(b => b.StartTime.Date > now);
+
         return View(await bookings.ToListAsync());
     }
 
@@ -50,7 +57,7 @@ public class BookingsController : Controller
             ModelState.AddModelError("EndTime", "End time must be after start time.");
         }
 
-        // Conflict detection
+        // Conflict detection: ensure no overlap with existing bookings for the same resource
         bool hasConflict = await _context.Bookings.AnyAsync(b =>
             b.ResourceId == booking.ResourceId &&
             b.StartTime < booking.EndTime &&
@@ -62,10 +69,18 @@ public class BookingsController : Controller
 
         if (ModelState.IsValid)
         {
-            _context.Add(booking);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Booking created successfully.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.Add(booking);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Booking created successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                // Log error and show user-friendly message
+                ModelState.AddModelError(string.Empty, "An error occurred while saving the booking. Please try again.");
+            }
         }
         return View(booking);
     }
@@ -138,16 +153,24 @@ public class BookingsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var booking = await _context.Bookings.FindAsync(id);
-        if (booking != null)
+        try
         {
-            _context.Bookings.Remove(booking);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Booking deleted successfully.";
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking != null)
+            {
+                _context.Bookings.Remove(booking);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Booking deleted successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Booking not found or already deleted.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Booking not found or already deleted.";
+            // Log error and show user-friendly message
+            TempData["ErrorMessage"] = "An error occurred while deleting the booking. Please try again.";
         }
         return RedirectToAction(nameof(Index));
     }

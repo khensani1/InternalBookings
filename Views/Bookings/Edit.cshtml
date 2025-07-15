@@ -6,14 +6,13 @@
 }
 
 <h1>Edit Booking</h1>
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
     <div class="form-group">
-        <label asp-for="ResourceId"></label>
-        <select asp-for="ResourceId" class="form-control" asp-items="ViewBag.ResourceId">
-            <option value="">-- Select Resource --</option>
-        </select>
-        <span asp-validation-for="ResourceId" class="text-danger"></span>
+        @Html.LabelFor(model => model.ResourceId, htmlAttributes: new { @class = "control-label" })
+        @Html.DropDownListFor(model => model.ResourceId, (SelectList)ViewBag.ResourceId, "Select Resource", new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.ResourceId, "", new { @class = "text-danger" })
     </div>
     <div class="form-group">
         <label asp-for="StartTime"></label>

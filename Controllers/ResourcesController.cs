@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using System; // Added for Exception
+using System.Linq; // Added for .Any()
 
 public class ResourcesController : Controller
 {
@@ -51,10 +53,18 @@ public class ResourcesController : Controller
     {
         if (ModelState.IsValid)
         {
-            _context.Add(resource);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Resource created successfully.";
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                _context.Add(resource);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Resource created successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                // Log error and show user-friendly message
+                ModelState.AddModelError(string.Empty, "An error occurred while saving the resource. Please try again.");
+            }
         }
         return View(resource);
     }
@@ -106,16 +116,24 @@ public class ResourcesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var resource = await _context.Resources.FindAsync(id);
-        if (resource != null)
+        try
         {
-            _context.Resources.Remove(resource);
-            await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = "Resource deleted successfully.";
+            var resource = await _context.Resources.FindAsync(id);
+            if (resource != null)
+            {
+                _context.Resources.Remove(resource);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Resource deleted successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Resource not found or already deleted.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            TempData["ErrorMessage"] = "Resource not found or already deleted.";
+            // Log error and show user-friendly message
+            TempData["ErrorMessage"] = "An error occurred while deleting the resource. Please try again.";
         }
         return RedirectToAction(nameof(Index));
     }
