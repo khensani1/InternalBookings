@@ -67,19 +67,74 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert" id="bookingSuccessAlert">
-        <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="modal fade" id="bookingSuccessModal" tabindex="-1" aria-labelledby="bookingSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="bookingSuccessModalLabel"><i class="bi bi-check-circle-fill"></i> Success</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div style="font-size:1.2rem;">@TempData["SuccessMessage"]</div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Clear all form fields after success
-            var form = document.querySelector('form[asp-action="Create"]');
-            if (form) {
-                form.reset();
+            var modalEl = document.getElementById('bookingSuccessModal');
+            if (modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                // Clear all form fields after success
+                var form = document.querySelector('form[asp-action="Create"]');
+                if (form) {
+                    form.reset();
+                }
             }
         });
     </script>
+}
+
+@if (TempData["DebugError"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> <strong>Error:</strong> @TempData["DebugError"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model != null)
+{
+    <div class="alert alert-warning" style="font-size:0.95rem;">
+        <strong>Debug:</strong> Model.ResourceId = <code>@Model.ResourceId</code>
+    </div>
+}
+
+@if (TempData["PostedResourceId"] != null)
+{
+    <div class="alert alert-info" style="font-size:0.95rem;">
+        <strong>Debug:</strong> @TempData["PostedResourceId"]
+    </div>
+}
+
+@if (ViewData.ModelState != null && ViewData.ModelState.Values.SelectMany(v => v.Errors).Any())
+{
+    <div class="alert alert-danger">
+        <strong>All ModelState Errors:</strong>
+        <ul>
+        @foreach (var entry in ViewData.ModelState)
+        {
+            foreach (var error in entry.Value.Errors)
+            {
+                <li><strong>@entry.Key</strong>: @error.ErrorMessage</li>
+            }
+        }
+        </ul>
+    </div>
 }
 
 <div class="container d-flex justify-content-center">

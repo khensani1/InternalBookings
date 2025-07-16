@@ -41,7 +41,10 @@ public class BookingsController : Controller
     // GET: Bookings/Create
     public async Task<IActionResult> Create()
     {
-        ViewData["ResourceId"] = new SelectList(await _context.Resources.Where(r => r.IsAvailable).ToListAsync(), "Id", "Name");
+        var resources = await _context.Resources
+            .Select(r => new { r.Id, Name = r.Name + " (ID: " + r.Id + ")" })
+            .ToListAsync();
+        ViewData["ResourceId"] = new SelectList(resources, "Id", "Name");
         return View();
     }
 
@@ -50,7 +53,13 @@ public class BookingsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("ResourceId,StartTime,EndTime,BookedBy,Purpose")] Booking booking)
     {
-        ViewData["ResourceId"] = new SelectList(await _context.Resources.Where(r => r.IsAvailable).ToListAsync(), "Id", "Name", booking.ResourceId);
+        var resources = await _context.Resources
+            .Select(r => new { r.Id, Name = r.Name + " (ID: " + r.Id + ")" })
+            .ToListAsync();
+        ViewData["ResourceId"] = new SelectList(resources, "Id", "Name", booking.ResourceId);
+
+        // Debug: Log the posted ResourceId value
+        TempData["PostedResourceId"] = $"Posted ResourceId: {booking.ResourceId}";
 
         if (booking.EndTime <= booking.StartTime)
         {
@@ -67,6 +76,13 @@ public class BookingsController : Controller
             ModelState.AddModelError(string.Empty, "This resource is already booked during the requested time. Please choose another slot or resource, or adjust your times.");
         }
 
+        // Debug: Show model state errors in TempData for troubleshooting
+        if (!ModelState.IsValid)
+        {
+            var errors = string.Join("; ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+            TempData["DebugError"] = $"Validation failed: {errors}";
+        }
+
         if (ModelState.IsValid)
         {
             try
@@ -74,12 +90,13 @@ public class BookingsController : Controller
                 _context.Add(booking);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Booking created successfully.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Create));
             }
             catch (Exception ex)
             {
                 // Log error and show user-friendly message
                 ModelState.AddModelError(string.Empty, "An error occurred while saving the booking. Please try again.");
+                TempData["DebugError"] = $"Exception: {ex.Message}";
             }
         }
         return View(booking);
@@ -91,7 +108,7 @@ public class BookingsController : Controller
         if (id == null) return NotFound();
         var booking = await _context.Bookings.FindAsync(id);
         if (booking == null) return NotFound();
-        ViewData["ResourceId"] = new SelectList(await _context.Resources.Where(r => r.IsAvailable).ToListAsync(), "Id", "Name", booking.ResourceId);
+        ViewData["ResourceId"] = new SelectList(await _context.Resources.ToListAsync(), "Id", "Name", booking.ResourceId);
         return View(booking);
     }
 
@@ -101,7 +118,7 @@ public class BookingsController : Controller
     public async Task<IActionResult> Edit(int id, [Bind("Id,ResourceId,StartTime,EndTime,BookedBy,Purpose")] Booking booking)
     {
         if (id != booking.Id) return NotFound();
-        ViewData["ResourceId"] = new SelectList(await _context.Resources.Where(r => r.IsAvailable).ToListAsync(), "Id", "Name", booking.ResourceId);
+        ViewData["ResourceId"] = new SelectList(await _context.Resources.ToListAsync(), "Id", "Name", booking.ResourceId);
 
         if (booking.EndTime <= booking.StartTime)
         {
