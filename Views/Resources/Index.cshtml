@@ -1,0 +1,248 @@
+@model IEnumerable<Resource>
+
+@{
+    ViewData["Title"] = "Resources";
+    var available = ViewBag.SearchAvailable;
+    var options = new List<(string Value, string Text)>
+    {
+        ("", "All"),
+        ("true", "Available"),
+        ("false", "Unavailable")
+    };
+    var optionHtml = new System.Text.StringBuilder();
+    foreach (var opt in options)
+    {
+        var selected = (available == null && opt.Value == "") ||
+                       (available != null && available.ToString().ToLower() == opt.Value)
+                       ? " selected" : "";
+        optionHtml.Append($"<option value=\"{opt.Value}\"{selected}>{opt.Text}</option>");
+    }
+    int total = Model.Count();
+    int availableCount = Model.Count(r => r.IsAvailable);
+    int unavailableCount = total - availableCount;
+}
+
+<style>
+    .resources-bg {
+        background: linear-gradient(135deg, #ffe5b4 0%, #fffbe6 100%);
+        min-height: 100vh;
+    }
+    .resources-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 24px rgba(27,110,194,0.08), 0 1.5px 6px rgba(0,0,0,0.03);
+        padding: 2.5rem 2rem 2rem 2rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+    .resources-header {
+        color: #1b6ec2;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .resources-summary {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    .summary-box {
+        background: #e3f0fa;
+        border-radius: 1rem;
+        padding: 1.2rem 2rem;
+        min-width: 180px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(27,110,194,0.07);
+        margin-bottom: 1rem;
+    }
+    .summary-box .icon {
+        font-size: 2.2rem;
+        color: #1b6ec2;
+        margin-bottom: 0.3rem;
+    }
+    .summary-box .count {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1b6ec2;
+    }
+    .summary-box .label {
+        color: #555;
+        font-size: 1.1rem;
+    }
+    .resources-search {
+        background: #f3f6fa;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 4px rgba(27,110,194,0.04);
+    }
+    .resources-table {
+        background: #f9fafb;
+        border-radius: 0.75rem;
+        overflow-x: auto;
+        box-shadow: 0 1px 4px rgba(27,110,194,0.04);
+    }
+    .resources-table th {
+        background: #1b6ec2;
+        color: #fff;
+        border: none;
+    }
+    .resources-table td {
+        vertical-align: middle;
+    }
+    .resources-actions a {
+        margin-right: 0.5rem;
+    }
+    .resource-img {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        border: 1px solid #e3f0fa;
+        margin-right: 0.5rem;
+        background: #f3f6fa;
+    }
+    .export-btn {
+        margin-bottom: 1rem;
+    }
+    @@media (max-width: 576px) {
+        .resources-card { padding: 1.2rem 0.5rem; }
+        .resources-summary { gap: 1rem; }
+        .summary-box { padding: 1rem 0.5rem; min-width: 120px; }
+        .resources-search { padding: 0.5rem 0.5rem; }
+        .resource-img { width: 32px; height: 32px; }
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('resources-bg');
+        // Tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        // Export to CSV
+        document.getElementById('exportCsvBtn')?.addEventListener('click', function() {
+            let rows = Array.from(document.querySelectorAll('.resources-table tbody tr'));
+            let visibleRows = rows.filter(r => r.offsetParent !== null);
+            let csv = 'Name,Description,Location,Capacity,Available\n';
+            visibleRows.forEach(row => {
+                let cells = row.querySelectorAll('td');
+                let name = cells[1]?.innerText.trim().replace(/,/g, ' ');
+                let desc = cells[2]?.innerText.trim().replace(/,/g, ' ');
+                let loc = cells[3]?.innerText.trim().replace(/,/g, ' ');
+                let cap = cells[4]?.innerText.trim().replace(/,/g, ' ');
+                let avail = cells[5]?.innerText.trim().replace(/,/g, ' ');
+                csv += `${name},${desc},${loc},${cap},${avail}\n`;
+            });
+            let blob = new Blob([csv], { type: 'text/csv' });
+            let link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'resources.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    });
+</script>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-11 col-md-12">
+            <div class="resources-card">
+                <div class="resources-header text-center">
+                    <h1 class="mb-1"><i class="bi bi-box-seam"></i> Resources</h1>
+                </div>
+                <div class="resources-summary">
+                    <div class="summary-box">
+                        <div class="icon"><i class="bi bi-box"></i></div>
+                        <div class="count">@total</div>
+                        <div class="label">Total</div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="icon"><i class="bi bi-check-circle"></i></div>
+                        <div class="count">@availableCount</div>
+                        <div class="label">Available</div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="icon"><i class="bi bi-x-circle"></i></div>
+                        <div class="count">@unavailableCount</div>
+                        <div class="label">Unavailable</div>
+                    </div>
+                </div>
+                <form method="get" class="resources-search row g-2 align-items-end mb-3">
+                    <div class="col-md-4">
+                        <label for="searchName" class="form-label mb-1">Name</label>
+                        <input type="text" name="searchName" id="searchName" value="@(ViewBag.SearchName ?? "")" class="form-control" placeholder="Name" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="searchLocation" class="form-label mb-1">Location</label>
+                        <input type="text" name="searchLocation" id="searchLocation" value="@(ViewBag.SearchLocation ?? "")" class="form-control" placeholder="Location" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchAvailable" class="form-label mb-1">Availability</label>
+                        <select name="searchAvailable" id="searchAvailable" class="form-select">
+                            @Html.Raw(optionHtml.ToString())
+                        </select>
+                    </div>
+                    <div class="col-md-1 d-grid">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+                    </div>
+                    <div class="col-12 d-grid d-md-flex justify-content-md-end mt-2 mt-md-0">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-2"><i class="bi bi-arrow-clockwise"></i> Reset</a>
+                        <a class="btn btn-success" asp-action="Create"><i class="bi bi-plus-circle"></i> Add Resource</a>
+                    </div>
+                </form>
+                <button id="exportCsvBtn" class="btn btn-outline-primary export-btn"><i class="bi bi-download"></i> Export to CSV</button>
+                <div class="resources-table mb-3">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Location</th>
+                                <th>Capacity</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="https://via.placeholder.com/48x48?text=No+Image" alt="No Image" class="resource-img" data-bs-toggle="tooltip" title="No image available" />
+                                </td>
+                                <td data-bs-toggle="tooltip" title="Resource name">@item.Name</td>
+                                <td data-bs-toggle="tooltip" title="@item.Description">@item.Description</td>
+                                <td data-bs-toggle="tooltip" title="@item.Location">@item.Location</td>
+                                <td data-bs-toggle="tooltip" title="Capacity: @item.Capacity">@item.Capacity</td>
+                                <td>
+                                    @if (item.IsAvailable)
+                                    {
+                                        <span class="badge bg-success">Yes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">No</span>
+                                    }
+                                </td>
+                                <td class="resources-actions">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm"><i class="bi bi-info-circle"></i> Details</a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i> Edit</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this resource?');"><i class="bi bi-trash"></i> Delete</a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons CDN (if not already included) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> 

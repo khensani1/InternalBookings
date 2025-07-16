@@ -1,0 +1,185 @@
+@model Booking
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Create Booking";
+}
+
+<style>
+    .create-booking-bg {
+        background: linear-gradient(135deg, #ffe5b4 0%, #fffbe6 100%);
+        min-height: 100vh;
+    }
+    .create-booking-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 24px rgba(27,110,194,0.08), 0 1.5px 6px rgba(0,0,0,0.03);
+        padding: 2.5rem 2rem 2rem 2rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        max-width: 600px;
+    }
+    .create-booking-header {
+        color: #1b6ec2;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #1b6ec2;
+    }
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .btn-success {
+        box-shadow: 0 2px 8px rgba(27,110,194,0.13);
+    }
+    .btn-secondary {
+        margin-left: 0.5rem;
+    }
+    @@media (max-width: 576px) {
+        .create-booking-card { padding: 1.2rem 0.5rem; }
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('create-booking-bg');
+        // Set min EndTime to StartTime
+        const startInput = document.getElementById('StartTime');
+        const endInput = document.getElementById('EndTime');
+        if (startInput && endInput) {
+            function updateEndMin() {
+                endInput.min = startInput.value;
+                if (endInput.value && endInput.value < startInput.value) {
+                    endInput.value = '';
+                }
+            }
+            startInput.addEventListener('change', updateEndMin);
+            // Initialize on page load
+            updateEndMin();
+        }
+    });
+</script>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="modal fade" id="bookingSuccessModal" tabindex="-1" aria-labelledby="bookingSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="bookingSuccessModalLabel"><i class="bi bi-check-circle-fill"></i> Success</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div style="font-size:1.2rem;">@TempData["SuccessMessage"]</div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var modalEl = document.getElementById('bookingSuccessModal');
+            if (modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                // Clear all form fields after success
+                var form = document.querySelector('form[asp-action="Create"]');
+                if (form) {
+                    form.reset();
+                }
+            }
+        });
+    </script>
+}
+
+@if (TempData["DebugError"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> <strong>Error:</strong> @TempData["DebugError"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model != null)
+{
+    <div class="alert alert-warning" style="font-size:0.95rem;">
+        <strong>Debug:</strong> Model.ResourceId = <code>@Model.ResourceId</code>
+    </div>
+}
+
+@if (TempData["PostedResourceId"] != null)
+{
+    <div class="alert alert-info" style="font-size:0.95rem;">
+        <strong>Debug:</strong> @TempData["PostedResourceId"]
+    </div>
+}
+
+@if (ViewData.ModelState != null && ViewData.ModelState.Values.SelectMany(v => v.Errors).Any())
+{
+    <div class="alert alert-danger">
+        <strong>All ModelState Errors:</strong>
+        <ul>
+        @foreach (var entry in ViewData.ModelState)
+        {
+            foreach (var error in entry.Value.Errors)
+            {
+                <li><strong>@entry.Key</strong>: @error.ErrorMessage</li>
+            }
+        }
+        </ul>
+    </div>
+}
+
+<div class="container d-flex justify-content-center">
+    <div class="create-booking-card w-100">
+        <div class="create-booking-header mb-4">
+            <i class="bi bi-calendar-plus" style="font-size:2rem;"></i>
+            <span>Create Booking</span>
+        </div>
+        <div class="mb-3" style="color:#888;font-size:1.1rem;">Fill in the details below to book a resource. All fields are required.</div>
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                @Html.LabelFor(model => model.ResourceId, htmlAttributes: new { @class = "form-label" })
+                @Html.DropDownListFor(model => model.ResourceId, (SelectList)ViewBag.ResourceId, "Select Resource", new { @class = "form-select" })
+                @Html.ValidationMessageFor(model => model.ResourceId, "", new { @class = "text-danger" })
+            </div>
+            <div class="mb-3">
+                @Html.LabelFor(model => model.StartTime, htmlAttributes: new { @class = "form-label" })
+                <input asp-for="StartTime" class="form-control" type="datetime-local" />
+                @Html.ValidationMessageFor(model => model.StartTime, "", new { @class = "text-danger" })
+            </div>
+            <div class="mb-3">
+                @Html.LabelFor(model => model.EndTime, htmlAttributes: new { @class = "form-label" })
+                <input asp-for="EndTime" class="form-control" type="datetime-local" />
+                @Html.ValidationMessageFor(model => model.EndTime, "", new { @class = "text-danger" })
+            </div>
+            <div class="mb-3">
+                @Html.LabelFor(model => model.BookedBy, htmlAttributes: new { @class = "form-label" })
+                @Html.EditorFor(model => model.BookedBy, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.BookedBy, "", new { @class = "text-danger" })
+            </div>
+            <div class="mb-3">
+                @Html.LabelFor(model => model.Purpose, htmlAttributes: new { @class = "form-label" })
+                @Html.EditorFor(model => model.Purpose, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Purpose, "", new { @class = "text-danger" })
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Create Booking</button>
+                <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-circle"></i> Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+<!-- Bootstrap Icons CDN (if not already included) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> 

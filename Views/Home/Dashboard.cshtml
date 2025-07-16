@@ -1,0 +1,312 @@
+@using System.Globalization
+@{
+    ViewData["Title"] = "Dashboard";
+    var todaysBookings = ViewBag.TodaysBookings as List<Booking>;
+    var upcomingBookings = ViewBag.UpcomingBookings as List<Booking>;
+    int todayCount = todaysBookings?.Count ?? 0;
+    int upcomingCount = upcomingBookings?.Count ?? 0;
+    // For chart: group upcoming bookings by day
+    List<dynamic> chartData;
+    if (upcomingBookings != null)
+    {
+        chartData = upcomingBookings.GroupBy(b => b.StartTime.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .Cast<dynamic>()
+            .ToList();
+    }
+    else
+    {
+        chartData = new List<dynamic>();
+    }
+    // For filter dropdowns
+    var allResources = upcomingBookings?.Select(b => b.Resource?.Name).Concat(todaysBookings?.Select(b => b.Resource?.Name) ?? new List<string>()).Distinct().Where(n => !string.IsNullOrEmpty(n)).ToList() ?? new List<string>();
+    var allUsers = upcomingBookings?.Select(b => b.BookedBy).Concat(todaysBookings?.Select(b => b.BookedBy) ?? new List<string>()).Distinct().Where(n => !string.IsNullOrEmpty(n)).ToList() ?? new List<string>();
+}
+
+<style>
+    .dashboard-bg {
+        background: linear-gradient(135deg, #ffe5b4 0%, #fffbe6 100%);
+        min-height: 100vh;
+    }
+    .dashboard-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 24px rgba(27,110,194,0.08), 0 1.5px 6px rgba(0,0,0,0.03);
+        padding: 2.5rem 2rem 2rem 2rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+    .dashboard-header {
+        color: #1b6ec2;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .dashboard-summary {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    .summary-box {
+        background: #e3f0fa;
+        border-radius: 1rem;
+        padding: 1.2rem 2rem;
+        min-width: 180px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(27,110,194,0.07);
+        margin-bottom: 1rem;
+    }
+    .summary-box .icon {
+        font-size: 2.2rem;
+        color: #1b6ec2;
+        margin-bottom: 0.3rem;
+    }
+    .summary-box .count {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1b6ec2;
+    }
+    .summary-box .label {
+        color: #555;
+        font-size: 1.1rem;
+    }
+    .dashboard-section {
+        margin-bottom: 2.5rem;
+    }
+    .dashboard-table {
+        background: #f9fafb;
+        border-radius: 0.75rem;
+        overflow-x: auto;
+        box-shadow: 0 1px 4px rgba(27,110,194,0.04);
+    }
+    .dashboard-table th {
+        background: #1b6ec2;
+        color: #fff;
+        border: none;
+    }
+    .dashboard-table td {
+        vertical-align: middle;
+    }
+    .dashboard-filters {
+        background: #f3f6fa;
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 4px rgba(27,110,194,0.04);
+    }
+    .dashboard-chart-section {
+        margin-bottom: 2.5rem;
+    }
+    @@media (max-width: 576px) {
+        .dashboard-card { padding: 1.2rem 0.5rem; }
+        .dashboard-summary { gap: 1rem; }
+        .summary-box { padding: 1rem 0.5rem; min-width: 120px; }
+        .dashboard-filters { padding: 0.5rem 0.5rem; }
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('dashboard-bg');
+        // Chart.js rendering
+        var ctx = document.getElementById('bookingsChart');
+        if (ctx) {
+            var chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [@string.Join(",", chartData.Select(d => "'" + d.Date.ToString("MMM dd", CultureInfo.InvariantCulture) + "'"))],
+                    datasets: [{
+                        label: 'Bookings',
+                        data: [@string.Join(",", chartData.Select(d => d.Count))],
+                        backgroundColor: '#1b6ec2',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, precision:0 } }
+                }
+            });
+        }
+        // Filter logic
+        const filterForm = document.getElementById('dashboardFilterForm');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const resource = document.getElementById('filterResource').value.toLowerCase();
+                const user = document.getElementById('filterUser').value.toLowerCase();
+                const date = document.getElementById('filterDate').value;
+                document.querySelectorAll('.dashboard-table tbody tr').forEach(row => {
+                    let show = true;
+                    if (resource && !row.dataset.resource.toLowerCase().includes(resource)) show = false;
+                    if (user && !row.dataset.user.toLowerCase().includes(user)) show = false;
+                    if (date && !row.dataset.date.startsWith(date)) show = false;
+                    row.style.display = show ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-md-11">
+            <div class="dashboard-card">
+                <div class="dashboard-header text-center">
+                    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-2">
+                        <h1 class="mb-1"><i class="bi bi-bar-chart-line"></i> Dashboard</h1>
+                        <a href="@Url.Action("Create", "Bookings")" class="btn btn-primary btn-lg mt-2 mt-md-0" style="box-shadow:0 2px 8px rgba(27,110,194,0.13);">
+                            <i class="bi bi-plus-circle"></i> Create Booking
+                        </a>
+                    </div>
+                    <div class="mb-2" style="color:#888;font-size:1.1rem;">Welcome! Here is a quick overview of resource bookings.</div>
+                </div>
+                <div class="dashboard-summary">
+                    <div class="summary-box">
+                        <div class="icon"><i class="bi bi-calendar-day"></i></div>
+                        <div class="count">@todayCount</div>
+                        <div class="label">Today's Bookings</div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="icon"><i class="bi bi-calendar-week"></i></div>
+                        <div class="count">@upcomingCount</div>
+                        <div class="label">Upcoming (7 days)</div>
+                    </div>
+                </div>
+                <div class="dashboard-filters mb-4">
+                    <form id="dashboardFilterForm" class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label for="filterResource" class="form-label mb-1">Resource</label>
+                            <select id="filterResource" class="form-select">
+                                <option value="">All</option>
+                                @foreach (var res in allResources.OrderBy(r => r)) {
+                                    <option value="@res">@res</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterUser" class="form-label mb-1">Booked By</label>
+                            <select id="filterUser" class="form-select">
+                                <option value="">All</option>
+                                @foreach (var user in allUsers.OrderBy(u => u)) {
+                                    <option value="@user">@user</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filterDate" class="form-label mb-1">Date</label>
+                            <input type="date" id="filterDate" class="form-control" />
+                        </div>
+                        <div class="col-md-1 d-grid">
+                            <button type="submit" class="btn btn-info"><i class="bi bi-funnel"></i> Filter</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="dashboard-chart-section mb-4">
+                    <h5 class="mb-3"><i class="bi bi-bar-chart"></i> Bookings Trend (Next 7 Days)</h5>
+                    <canvas id="bookingsChart" height="80"></canvas>
+                </div>
+                <div class="dashboard-section">
+                    <h3 class="mb-3"><i class="bi bi-calendar-day"></i> Today's Bookings</h3>
+                    @if (todaysBookings != null && todaysBookings.Any())
+                    {
+                        <div class="dashboard-table mb-3">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Booked By</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var booking in todaysBookings)
+                                {
+                                    <tr data-resource="@booking.Resource?.Name" data-user="@booking.BookedBy" data-date="@booking.StartTime.ToString("yyyy-MM-dd")">
+                                        <td>
+                                            @if (booking.Resource != null)
+                                            {
+                                                <a href="@Url.Action("Details", "Resources", new { id = booking.Resource.Id })" class="text-decoration-underline">@booking.Resource.Name</a>
+                                            }
+                                            else { @("-") }
+                                        </td>
+                                        <td>@booking.StartTime.ToString("g")</td>
+                                        <td>@booking.EndTime.ToString("g")</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(booking.BookedBy))
+                                            {
+                                                <a href="mailto:@booking.BookedBy" class="text-decoration-underline">@booking.BookedBy</a>
+                                            }
+                                            else { @("-") }
+                                        </td>
+                                        <td>@booking.Purpose</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">No bookings for today.</div>
+                    }
+                </div>
+                <div class="dashboard-section">
+                    <h3 class="mb-3"><i class="bi bi-calendar-week"></i> Upcoming Bookings (Next 7 Days)</h3>
+                    @if (upcomingBookings != null && upcomingBookings.Any())
+                    {
+                        <div class="dashboard-table mb-3">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Booked By</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var booking in upcomingBookings)
+                                {
+                                    <tr data-resource="@booking.Resource?.Name" data-user="@booking.BookedBy" data-date="@booking.StartTime.ToString("yyyy-MM-dd")">
+                                        <td>
+                                            @if (booking.Resource != null)
+                                            {
+                                                <a href="@Url.Action("Details", "Resources", new { id = booking.Resource.Id })" class="text-decoration-underline">@booking.Resource.Name</a>
+                                            }
+                                            else { @("-") }
+                                        </td>
+                                        <td>@booking.StartTime.ToString("g")</td>
+                                        <td>@booking.EndTime.ToString("g")</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(booking.BookedBy))
+                                            {
+                                                <a href="mailto:@booking.BookedBy" class="text-decoration-underline">@booking.BookedBy</a>
+                                            }
+                                            else { @("-") }
+                                        </td>
+                                        <td>@booking.Purpose</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">No upcoming bookings in the next 7 days.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons CDN (if not already included) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> 

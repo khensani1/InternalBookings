@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    body.home-bg {
+        background: linear-gradient(135deg, #ffe5b4 0%, #fffbe6 100%);
+        min-height: 100vh;
+    }
+    .main-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 24px rgba(27,110,194,0.08), 0 1.5px 6px rgba(0,0,0,0.03);
+        padding: 2.5rem 2rem 2rem 2rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+    .main-card h1 {
+        color: #1b6ec2;
+        font-weight: 700;
+    }
+    .main-card p.lead {
+        color: #555;
+    }
+    .main-card .btn-lg {
+        font-size: 1.25rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        transition: transform 0.1s, box-shadow 0.1s;
+        box-shadow: 0 2px 8px rgba(27,110,194,0.07);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-align: left;
+    }
+    .main-card .btn-lg:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 6px 18px rgba(27,110,194,0.13);
+    }
+    .main-card .desc {
+        font-size: 1rem;
+        color: #888;
+        margin-left: 2.2rem;
+        margin-bottom: 0.5rem;
+    }
+    @@media (max-width: 576px) {
+        .main-card { padding: 1.2rem 0.5rem; }
+        .main-card .btn-lg { font-size: 1rem; padding: 0.75rem 1rem; }
+    }
+</style>
+
+<script>
+    // Add a class to body for home background
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('home-bg');
+    });
+</script>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="main-card text-center">
+                <h1 class="display-4 mb-3">Welcome to Internal Resource Booking</h1>
+                <p class="lead mb-4">Easily manage and book resources within your organization. Get started by choosing an option below:</p>
+                <div class="d-grid gap-3 mb-3">
+                    <a href="@Url.Action("Dashboard", "Home")" class="btn btn-primary btn-lg"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    <div class="desc">View today's and upcoming bookings at a glance.</div>
+                    <a href="@Url.Action("Index", "Resources")" class="btn btn-success btn-lg"><i class="bi bi-box-seam"></i> Resources</a>
+                    <div class="desc">Browse, add, or manage available resources.</div>
+                    <a href="@Url.Action("Index", "Bookings")" class="btn btn-info btn-lg"><i class="bi bi-calendar-check"></i> Bookings</a>
+                    <div class="desc">See all bookings or create a new one.</div>
+                    <a href="@Url.Action("Privacy", "Home")" class="btn btn-secondary btn-lg"><i class="bi bi-shield-lock"></i> Privacy</a>
+                    <div class="desc">Read about our privacy policy and data protection.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons CDN (if not already included) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
